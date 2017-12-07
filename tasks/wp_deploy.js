@@ -38,7 +38,6 @@ module.exports = function(grunt) {
       deploy_tag: true
     });
 
-    var pkg = grunt.file.readJSON('package.json');
     options.deploy_tag = options.deploy_tag && options.deploy_trunk;
 
     if( !options.plugin_slug ){
@@ -140,7 +139,7 @@ module.exports = function(grunt) {
         options.assets_dir ? commitAssets : null
       ].filter(function(val) { return val !== null; });
 
-      async.waterfall( steps, function (err, result){
+      async.waterfall( steps, function() {
         done();
       });
 
@@ -150,7 +149,7 @@ module.exports = function(grunt) {
 
   var checkOut = function ( ctxt, callback ) {
     grunt.log.writeln( 'Checking out '+ ctxt.svnurl+ '...' );
-    exec( 'svn co ' + ctxt.force_interactive + ' '+ctxt.svnurl+ ' ' + ctxt.svnpath, { maxBuffer: ctxt.max_buffer }, function (error, stdout, stderr) {
+    exec( 'svn co ' + ctxt.force_interactive + ' '+ctxt.svnurl+ ' ' + ctxt.svnpath, { maxBuffer: ctxt.max_buffer }, function (error) {
       if (error !== null) {
         grunt.fail.fatal( 'Checkout of "'+ctxt.svnurl+'"unsuccessful: ' + error);
       }
@@ -213,7 +212,7 @@ module.exports = function(grunt) {
   var addFiles = function( ctxt, callback ) {
     var cmd = "svn status |" + awk + " '/^[?]/{print $2}' | xargs " + no_run_if_empty + "svn add;";
     cmd += "svn status | " + awk + " '/^[!]/{print $2}' | xargs " + no_run_if_empty + "svn delete;";
-    exec(cmd,{cwd: ctxt.svnpath+"/trunk"}, function( a, b, c ){
+    exec(cmd,{cwd: ctxt.svnpath+"/trunk"}, function(){
       callback( null, ctxt );
     });
   };
@@ -222,7 +221,7 @@ module.exports = function(grunt) {
     var trunkCommitMsg = "Committing " + ctxt.new_version + " to trunk";
     grunt.log.writeln( "\n" + trunkCommitMsg + "\n" );
     var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" -m "'+trunkCommitMsg+'"';
-    exec( cmd, {cwd:ctxt.svnpath+'/trunk'}, function(error, stdout, stderr) {
+    exec( cmd, {cwd:ctxt.svnpath+'/trunk'}, function(error) {
       if (error !== null) {
         grunt.fail.warn( 'Failed to commit to trunk: ' + error );
       }
@@ -232,7 +231,7 @@ module.exports = function(grunt) {
 
   var copyToTag = function( ctxt, callback ) {
     grunt.log.writeln( 'Copying ' + ctxt.new_version + ' to tag');
-    exec( "svn copy trunk/ tags/"+ctxt.new_version, { cwd: ctxt.svnpath }, function( error, stdout, stderr) {
+    exec( "svn copy trunk/ tags/"+ctxt.new_version, { cwd: ctxt.svnpath }, function(error) {
       if (error !== null) {
         grunt.fail.warn( 'Failed to copy to tag: ' + error );
       }
@@ -244,7 +243,7 @@ module.exports = function(grunt) {
     var tagCommitMsg   = "Tagging " + ctxt.new_version;
     grunt.log.writeln( tagCommitMsg + "\n" );
     var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" -m "'+tagCommitMsg+'"';
-    exec( cmd , { cwd: ctxt.svnpath+'/tags/'+ctxt.new_version }, function( error, stdout, stderr) {
+    exec( cmd , { cwd: ctxt.svnpath+'/tags/'+ctxt.new_version }, function( error ) {
       if (error !== null) {
         grunt.fail.warn( 'Failed to comit tag: ' + error );
       }
@@ -255,7 +254,7 @@ module.exports = function(grunt) {
   var addAssets = function( ctxt, callback ) {
     var cmd = "svn status |" + awk + " '/^[?]/{print $2}' | xargs " + no_run_if_empty + "svn add;";
     cmd += "svn status | " + awk + " '/^[!]/{print $2}' | xargs " + no_run_if_empty + "svn delete;";
-    exec( cmd,{ cwd: ctxt.svnpath+"/assets" }, function(error, stdout, stderr) {
+    exec( cmd,{ cwd: ctxt.svnpath+"/assets" }, function(error) {
       if (error !== null) {
         grunt.log.writeln( cmd );
         grunt.fail.warn( 'Failed to add assets: ' + error );
@@ -270,7 +269,7 @@ module.exports = function(grunt) {
 
     var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" -m "'+assetCommitMsg+'"';
 
-    exec( cmd,{ cwd: ctxt.svnpath+"/assets" }, function(error, stdout, stderr) {
+    exec( cmd,{ cwd: ctxt.svnpath+"/assets" }, function(error) {
       if (error !== null) {
         grunt.fail.warn( 'Failed to commit to assets: ' + error );
       }
@@ -294,15 +293,6 @@ module.exports = function(grunt) {
     }
 
     return 0;
-  };
-
-
-  var detectDestType = function(dest) {
-    if (grunt.util._.endsWith(dest, '/')) {
-      return 'directory';
-    } else {
-      return 'file';
-    }
   };
 
   var unixifyPath = function(filepath) {
