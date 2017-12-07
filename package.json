@@ -40,7 +40,7 @@
     "grunt": ">=0.4.1"
   },
   "dependencies": {
-    "inquirer": "~0.2.1"
+    "inquirer": "^0.2.5"
   },
   "keywords": [
     "gruntplugin",
